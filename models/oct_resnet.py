@@ -1,5 +1,7 @@
 import torch.nn as nn
 from models.octconv import *
+import torch.utils.model_zoo as model_zoo
+import pdb
 
 
 __all__ = ['OctResNet', 'oct_resnet26', 'oct_resnet50', 'oct_resnet101', 'oct_resnet152', 'oct_resnet200']
@@ -107,16 +109,28 @@ class OctResNet(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
-
+        #pdb.set_trace()
         x_h, x_l = self.layer1(x)
+        x_return_1 = x_l
         x_h, x_l = self.layer2((x_h,x_l))
+        x_return_2 = x_l
         x_h, x_l = self.layer3((x_h,x_l))
+        x_return_3 = x_l
         x_h, x_l = self.layer4((x_h,x_l))
         x = self.avgpool(x_h)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
 
-        return x
+        return x_h,x_return_1,x_return_2,x_return_3
+    def _load_pretrained_model(self, model_path):
+        pretrain_dict = model_zoo.load_url(model_path)
+        model_dict = {}
+        state_dict = self.state_dict()
+        for k, v in pretrain_dict.items():
+            if k in state_dict:
+                model_dict[k] = v
+        state_dict.update(model_dict)
+        self.load_state_dict(state_dict)
 
 
 def oct_resnet26(pretrained=False, **kwargs):

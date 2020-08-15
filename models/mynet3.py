@@ -3,14 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 import math
-#import models.oct_resnet
+from models.oct_resnet import *
+import pdb
 
 class F_mynet3(nn.Module):
-    def __init__(self, backbone='resnet18',in_c=3, f_c=64, output_stride=8):
+    def __init__(self, backbone='resnet50',in_c=3, f_c=64, output_stride=8):
         self.in_c = in_c
         super(F_mynet3, self).__init__()
         self.module = mynet3(backbone=backbone, output_stride=output_stride, f_c=f_c, in_c=self.in_c)
     def forward(self, input):
+        #pdb.set_trace()
         return self.module(input)
 
 
@@ -57,8 +59,9 @@ def ResNet50(output_stride, BatchNorm=nn.BatchNorm2d, pretrained=True, in_c=3):
     output, low_level_feat:
     2048, 256
     """
-    #model = oct_resnet.oct_resnet50(False, [3, 4, 6, 3], stride=output_stride, alpha_in=in_c)
-    model = ResNet(Bottleneck, [3, 4, 6, 3], output_stride, BatchNorm, in_c=in_c)
+    model = oct_resnet26(Bottleneck)
+    #model = ResNet(Bottleneck, [3, 4, 6, 3], output_stride, BatchNorm, in_c=in_c)
+    print("hello!I am resnet50")
     if in_c !=3:
         pretrained=False
     if pretrained:
@@ -252,10 +255,12 @@ class ResNet(nn.Module):
 
 def build_backbone(backbone, output_stride, BatchNorm, in_c=3):
     if backbone == 'resnet50':
+        print("buildresnet50")
         return ResNet50(output_stride, BatchNorm, in_c=in_c)
     elif backbone == 'resnet34':
         return ResNet34(output_stride, BatchNorm, in_c=in_c)
     elif backbone == 'resnet18':
+        print("buildresnet18")
         return ResNet18(output_stride, BatchNorm, in_c=in_c)
     else:
         raise NotImplementedError
@@ -330,18 +335,29 @@ def build_decoder(fc, backbone, BatchNorm):
 
 
 class mynet3(nn.Module):
-    def __init__(self, backbone='resnet18', output_stride=16, f_c=64, freeze_bn=False, in_c=3):
+    def __init__(self, backbone='resnet50', output_stride=16, f_c=64, freeze_bn=False, in_c=3):
         super(mynet3, self).__init__()
         print('arch: mynet3')
+        backbone='resnet50'
+        print('output_stride')
+        print(output_stride)
         BatchNorm = nn.BatchNorm2d
         self.backbone = build_backbone(backbone, output_stride, BatchNorm, in_c)
         self.decoder = build_decoder(f_c, backbone, BatchNorm)
-
+        self.convX = nn.Conv2d(in_channels=2048, out_channels=512, kernel_size=1, stride=1, padding=0, bias=True)
+        self.convf2 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=1, stride=1, padding=0, bias=True)
+        self.convf3 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=1, stride=1, padding=0, bias=True)
+        self.convf4 = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=1, stride=1, padding=0, bias=True)
         if freeze_bn:
             self.freeze_bn()
 
     def forward(self, input):
+        #pdb.set_trace()
         x, f2, f3, f4 = self.backbone(input)
+        x = self.convX(x)
+        f2 = self.convf2(f2)
+        f3 = self.convf3(f3)
+        f4 = self.convf4(f4)
         x = self.decoder(x, f2, f3, f4)
         return x
 
