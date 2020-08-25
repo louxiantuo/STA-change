@@ -114,14 +114,17 @@ class OctResNet(nn.Module):
         m = nn.UpsamplingNearest2d(size=(x_h.shape[3],x_h.shape[3]))
         upsamle_x  =  m(x_l)
         x_return_1 = x_h + upsamle_x
+        #x_return_1 = x_h
         x_h, x_l = self.layer2((x_h,x_l))
         m = nn.UpsamplingNearest2d(size=(x_h.shape[3],x_h.shape[3]))
         upsamle_x  =  m(x_l)
         x_return_2 = x_h + upsamle_x
+        #x_return_2 = x_h
         x_h, x_l = self.layer3((x_h,x_l))
         m = nn.UpsamplingNearest2d(size=(x_h.shape[3],x_h.shape[3]))
         upsamle_x  =  m(x_l)
         x_return_3 = x_h + upsamle_x
+        #x_return_3 = x_h
         x_h, x_l = self.layer4((x_h,x_l))
         x = self.avgpool(x_h)
         x = x.view(x.size(0), -1)
