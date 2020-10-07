@@ -337,10 +337,10 @@ def build_decoder(fc, backbone, BatchNorm):
 class mynet3(nn.Module):
     def __init__(self, backbone='resnet50', output_stride=16, f_c=64, freeze_bn=False, in_c=3):
         super(mynet3, self).__init__()
-        print('arch: mynet3')
+        #print('arch: mynet3')
         backbone='resnet50'
-        print('output_stride')
-        print(output_stride)
+        #print('output_stride')
+        #print(output_stride)
         BatchNorm = nn.BatchNorm2d
         self.backbone = build_backbone(backbone, output_stride, BatchNorm, in_c)
         self.decoder = build_decoder(f_c, backbone, BatchNorm)
